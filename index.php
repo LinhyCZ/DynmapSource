@@ -134,7 +134,7 @@
 			<div id="positionFrameWrap"></div>
 		</div>
 	</div>
-	<div id="version">Version: Beta 0.3.3, Developed by LinhyCZ, http://linhy.cz</div>
+	<div id="version">Version: Beta 0.3.4, Developed by LinhyCZ, http://linhy.cz</div>
 	<a href="steam://connect/<?php echo $serverIP . ":" . $serverPort ;?>"><div id="connect"><img style="display:inline; height: 14px" src="https://cdn.rawgit.com/LinhyCZ/DynmapFiles/master/unturned.png"><font style="font-size: 20px">&nbsp;Connect to server!</font></div></a>
 	<noscript>Javascript is required for runinng this application!</noscript>
 	<script type="text/javascript">
@@ -152,6 +152,7 @@
 	var animateOldRotation = "";
 	var skipAnimate = false;
 	var admin = 0;
+	var resize = false;
 
 
 	$(function() {
@@ -184,7 +185,7 @@
 	
 		sendRequest();
 		$("#mainImage").load(function() {if(firstRun==true){init();firstRun=false;sendRequest();};});
-		$(window).resize(function(){init()});
+		$(window).resize(function(){resize = true; init()});
 		var interval = setInterval(sendRequest, <?php echo $syncinterval;?>);
 	});
 	function init() {
@@ -333,15 +334,15 @@
 						var top = Number(top) * Number(zmultiplicator);
 					}
 					document.getElementById("positionFrameWrap").innerHTML = document.getElementById("positionFrameWrap").innerHTML + '<div class="player" id="' + playerCSteamID + '"><img class="playerImage" id="' + playerCSteamID + 'cursor"src="cursor.png"><div class="playerInfo ' + playerStatus + '">' + playerName + '</div></div>';
-					if (oldTop[playerCSteamID] != undefined) {	
+					if (oldTop[playerCSteamID] != undefined && resize != true) {	
 						var topDiference = oldTop[playerCSteamID] - top;
 						var leftDiference = oldLeft[playerCSteamID] - left;
 						if (topDiference > 100 || topDiference < -100 || leftDiference > 100 || leftDiference < -100) {skipAnimate = true};
-							document.getElementById(playerCSteamID).style.top = oldTop[playerCSteamID] + "px";
-							document.getElementById(playerCSteamID).style.left = oldLeft[playerCSteamID] + "px";
-							document.getElementById(playerCSteamID + "cursor").style.transform = "rotate(" + oldRotation[playerCSteamID] + "deg)";
-							document.getElementById(playerCSteamID + "cursor").style.msTransform = "rotate(" + oldRotation[playerCSteamID] + "deg)";
-							document.getElementById(playerCSteamID + "cursor").style.webkitTransform = "rotate(" + oldRotation[playerCSteamID] + "deg)";
+						document.getElementById(playerCSteamID).style.top = oldTop[playerCSteamID] + "px";
+						document.getElementById(playerCSteamID).style.left = oldLeft[playerCSteamID] + "px";
+						document.getElementById(playerCSteamID + "cursor").style.transform = "rotate(" + oldRotation[playerCSteamID] + "deg)";
+						document.getElementById(playerCSteamID + "cursor").style.msTransform = "rotate(" + oldRotation[playerCSteamID] + "deg)";
+						document.getElementById(playerCSteamID + "cursor").style.webkitTransform = "rotate(" + oldRotation[playerCSteamID] + "deg)";
 					} else {
 						document.getElementById(playerCSteamID).style.top = top + "px";
 						document.getElementById(playerCSteamID).style.left = left + "px";
@@ -349,7 +350,7 @@
 						document.getElementById(playerCSteamID + "cursor").style.msTransform = "rotate(" + rotation + "deg)";
 						document.getElementById(playerCSteamID + "cursor").style.webkitTransform = "rotate(" + rotation + "deg)";
 					}
-					if (skipAnimate == false) {
+					if (skipAnimate == false || resize == true) {
 						animatePlayerCSteamID = animatePlayerCSteamID + ";" + playerCSteamID;
 						animateTop = animateTop + ";" + top;
 						animateLeft = animateLeft + ";" + left;
@@ -374,13 +375,15 @@
 					oldRotation[playerCSteamID] = rotation;
 				}
 			}
-			animate();
+
+			if(resize != true) {animate()};
 			if (admin == 1) {
 				admins = "";
 			} else {
 				admins = "s";
 			}
 			document.getElementById("info").innerHTML = document.getElementById("info").innerHTML + "<br>Currently " + admin + " admin" + admins + " online";
+			resize = false;
 		};
 	}
 
@@ -438,9 +441,7 @@
 <!--
 
 TODO:
-Steam browser protocol
 Otáčení max o 180°
-visibility 		
 Podpora pro IE a EDGE
 In-game chat
 -->
