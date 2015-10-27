@@ -1,5 +1,6 @@
 <?php 
-	include "dynmap-config.php"
+	include "dynmap-config.php";
+	$serverPort = $serverPort + 1;
 ?>
 
 <!DOCTYPE html>
@@ -94,6 +95,35 @@
 		color: white;
 	}
 
+	.playerColor {
+		color: white;
+	}
+
+	.admin {
+		color: cyan;
+	}
+
+	.pro {
+		color: gold;
+	}
+
+	#connect {
+		position: fixed;
+		top: 10px;
+		right: 10px;
+		border-radius: 20px;
+		border: 2px #1A1A1A solid;
+		background: rgba(232, 232, 232, 0.2);
+		padding-right: 20px;
+		padding-left: 20px;
+		text-align: center;
+		font-size: 30px;
+		line-height: 30px;
+		color: white;
+	}
+
+
+
 	</style>
 </head>
 <body>
@@ -104,7 +134,9 @@
 			<div id="positionFrameWrap"></div>
 		</div>
 	</div>
-	<div id="version">Version: Beta 0.2, Developed by LinhyCZ, http://linhy.cz</div>
+	<div id="version">Version: Beta 0.3.3, Developed by LinhyCZ, http://linhy.cz</div>
+	<a href="steam://connect/<?php echo $serverIP . ":" . $serverPort ;?>"><div id="connect"><img style="display:inline; height: 14px" src="https://cdn.rawgit.com/LinhyCZ/DynmapFiles/master/unturned.png"><font style="font-size: 20px">&nbsp;Connect to server!</font></div></a>
+	<noscript>Javascript is required for runinng this application!</noscript>
 	<script type="text/javascript">
 	//Request na server
 	var firstRun = true;
@@ -112,10 +144,14 @@
 	var zmultiplicator;
 	var oldTop = {};
 	var oldLeft = {};
-	var animatePlayerCSteamID;
-	var animateTop;
-	var animateLeft;
+	var oldRotation = {};
+	var animatePlayerCSteamID = "";
+	var animateTop = "";
+	var animateLeft = "";
+	var animateRotation = "";
+	var animateOldRotation = "";
 	var skipAnimate = false;
+	var admin = 0;
 
 
 	$(function() {
@@ -131,8 +167,23 @@
     	   		event.preventDefault();
 	       	}
 		});
+
+		var ms_ie = false;
+		var ua = window.navigator.userAgent;
+		var old_ie = ua.indexOf('MSIE ');
+		var new_ie = ua.indexOf('Trident/');
+		var edge = ua.indexOf('Edge/');
+    
+		if ((old_ie > -1) || (new_ie > -1) || (edge > -1)) {
+    		ms_ie = true;
+		}
+    
+		if ( ms_ie ) {
+			document.body.innerHTML = document.body.innerHTML + '<div style="position: fixed; background: #8B0000; width: 600px; top: 10px; left: 50%; margin-left: -320px; font-size: 30px; padding-left: 20px; padding-right: 20px; color: red; border: 2px solid black; z-index: 99999999999; border-radius: 20px; text-align: center">You are using browser, that is not supported!</div>';
+		}
+	
 		sendRequest();
-		$("#mainImage").load(function() {if(firstRun==true){init();firstRun=false;};});
+		$("#mainImage").load(function() {if(firstRun==true){init();firstRun=false;sendRequest();};});
 		$(window).resize(function(){init()});
 		var interval = setInterval(sendRequest, <?php echo $syncinterval;?>);
 	});
@@ -179,6 +230,7 @@
 	}
 
 	function sendRequest() {
+		admin = 0;
 		var conn;
 		if(window.XMLHttpRequest) {
 			conn = new XMLHttpRequest();
@@ -237,6 +289,24 @@
 					var z = playerPosition.split(",");
 					var z = z[2];
 
+					//Rotace
+					var rotation = player.split(";");
+					var rotation = rotation[3];
+					var rotation = rotation.split("=");
+					var rotation = rotation[1];
+
+					//PlayerStatus
+					var playerStatus = player.split(";");
+					var playerStatus = playerStatus[4];
+					var playerStatus = playerStatus.split("=");
+					var playerStatus = playerStatus[1];
+					if (playerStatus == "player") {
+						playerStatus = "playerColor";
+					};
+					if (playerStatus == "admin") {
+						admin++;
+					};
+
 					//Přepočítání pozice x na hodnotu left
 					if (Number(x) < 0) {
 						var left = Number(x)*-1;
@@ -262,32 +332,55 @@
 						var top = Number(top) + 512;
 						var top = Number(top) * Number(zmultiplicator);
 					}
-					document.getElementById("positionFrameWrap").innerHTML = document.getElementById("positionFrameWrap").innerHTML + '<div class="player" id="' + playerCSteamID + '"><img class="playerImage" src="cursor.png"><div class="playerInfo">' + playerName + '</div></div>';
+					document.getElementById("positionFrameWrap").innerHTML = document.getElementById("positionFrameWrap").innerHTML + '<div class="player" id="' + playerCSteamID + '"><img class="playerImage" id="' + playerCSteamID + 'cursor"src="cursor.png"><div class="playerInfo ' + playerStatus + '">' + playerName + '</div></div>';
 					if (oldTop[playerCSteamID] != undefined) {	
 						var topDiference = oldTop[playerCSteamID] - top;
 						var leftDiference = oldLeft[playerCSteamID] - left;
 						if (topDiference > 100 || topDiference < -100 || leftDiference > 100 || leftDiference < -100) {skipAnimate = true};
-						document.getElementById(playerCSteamID).style.top = oldTop[playerCSteamID] + "px";
-						document.getElementById(playerCSteamID).style.left = oldLeft[playerCSteamID] + "px";
+							document.getElementById(playerCSteamID).style.top = oldTop[playerCSteamID] + "px";
+							document.getElementById(playerCSteamID).style.left = oldLeft[playerCSteamID] + "px";
+							document.getElementById(playerCSteamID + "cursor").style.transform = "rotate(" + oldRotation[playerCSteamID] + "deg)";
+							document.getElementById(playerCSteamID + "cursor").style.msTransform = "rotate(" + oldRotation[playerCSteamID] + "deg)";
+							document.getElementById(playerCSteamID + "cursor").style.webkitTransform = "rotate(" + oldRotation[playerCSteamID] + "deg)";
 					} else {
 						document.getElementById(playerCSteamID).style.top = top + "px";
 						document.getElementById(playerCSteamID).style.left = left + "px";
+						document.getElementById(playerCSteamID + "cursor").style.transform = "rotate(" + rotation + "deg)";
+						document.getElementById(playerCSteamID + "cursor").style.msTransform = "rotate(" + rotation + "deg)";
+						document.getElementById(playerCSteamID + "cursor").style.webkitTransform = "rotate(" + rotation + "deg)";
 					}
 					if (skipAnimate == false) {
 						animatePlayerCSteamID = animatePlayerCSteamID + ";" + playerCSteamID;
 						animateTop = animateTop + ";" + top;
 						animateLeft = animateLeft + ";" + left;
+						if (oldRotation[playerCSteamID] != undefined) {
+							cache = Number(rotation) - Number(oldRotation[playerCSteamID]);
+							animateRotation = animateRotation + ";" + cache;
+						} else {
+							animateRotation = animateRotation + ";" + rotation;
+						}
+						animateOldRotation = animateOldRotation + ";" + oldRotation[playerCSteamID];
 					} else {
 						skipAnimate = false;
 						document.getElementById(playerCSteamID).style.top = top + "px";
 						document.getElementById(playerCSteamID).style.left = left + "px";
+						document.getElementById(playerCSteamID + "cursor").style.transform = "rotate(" + rotation + "deg)";
+						document.getElementById(playerCSteamID + "cursor").style.msTransform = "rotate(" + rotation + "deg)";
+						document.getElementById(playerCSteamID + "cursor").style.webkitTransform = "rotate(" + rotation + "deg)";
 					}
-
+						
 					oldTop[playerCSteamID] = top;
 					oldLeft[playerCSteamID] = left;
+					oldRotation[playerCSteamID] = rotation;
 				}
 			}
 			animate();
+			if (admin == 1) {
+				admins = "";
+			} else {
+				admins = "s";
+			}
+			document.getElementById("info").innerHTML = document.getElementById("info").innerHTML + "<br>Currently " + admin + " admin" + admins + " online";
 		};
 	}
 
@@ -295,14 +388,32 @@
 		animatePlayerCSteamID = animatePlayerCSteamID.split(";");
 		animateTop = animateTop.split(";");
 		animateLeft = animateLeft.split(";");
+		//alert(animateRotation);
+		animateRotation = animateRotation.split(";");
+		animateOldRotation = animateOldRotation.split(";");
 		for (var i = 0; i < animatePlayerCSteamID.length; i++) {
-			$("#" + animatePlayerCSteamID[i]).animate({top: animateTop[i], left: animateLeft[i]}, {duration: <?php echo $syncinterval ?>, queue: false});
+			$("#" + animatePlayerCSteamID[i]).animate({top: animateTop[i], left: animateLeft[i]}, {duration: <?php echo $syncinterval ?>, easing:"linear", queue: false});
+			AnimateRotate(animateRotation[i], animateOldRotation[i], animatePlayerCSteamID[i]);
 		};
 		animatePlayerCSteamID = "";
 		animateTop = "";
 		animateLeft = "";
+		animateRotation = "";
+		animateOldRotation = "";
 
 		checkArray();
+	}
+
+	function AnimateRotate(d, old, id){
+    	$({deg: 0}).animate({deg: d}, {
+        	duration: <?php echo $syncinterval ?>,
+        	step: function(now, fx){
+        		rotationLevel = Number(now) + Number(old);
+            	$("#" + id + "cursor").css({
+                	transform: "rotate(" + rotationLevel + "deg)"
+            	});
+        	}
+    	});
 	}
 
 	function checkArray() {
@@ -327,6 +438,9 @@
 <!--
 
 TODO:
-Modrá a zlatá barva pro admina a VIP
-Animace a směr pohledu
+Steam browser protocol
+Otáčení max o 180°
+visibility 		
+Podpora pro IE a EDGE
+In-game chat
 -->
