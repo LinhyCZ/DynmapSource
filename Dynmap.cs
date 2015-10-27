@@ -259,11 +259,3 @@ namespace dynmap.core
         }
     }
 }
-
-
-/*
- * TODO:
- * Odeslání aktuální mapy na server
- * Přidat do configu možnosti na další data /Zdraví, Hydratace, Energie/
- * Klient
-*/
