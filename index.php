@@ -134,7 +134,7 @@
 			<div id="positionFrameWrap"></div>
 		</div>
 	</div>
-	<div id="version">Version: Beta 0.3.4, Developed by LinhyCZ, http://linhy.cz</div>
+	<div id="version">Version: Beta 0.3.6, Developed by LinhyCZ, http://linhy.cz</div>
 	<a href="steam://connect/<?php echo $serverIP . ":" . $serverPort ;?>"><div id="connect"><img style="display:inline; height: 14px" src="https://cdn.rawgit.com/LinhyCZ/DynmapFiles/master/unturned.png"><font style="font-size: 20px">&nbsp;Connect to server!</font></div></a>
 	<noscript>Javascript is required for runinng this application!</noscript>
 	<script type="text/javascript">
@@ -153,6 +153,7 @@
 	var skipAnimate = false;
 	var admin = 0;
 	var resize = false;
+	var naturalHeight;
 
 
 	$(function() {
@@ -309,29 +310,81 @@
 					};
 
 					//Přepočítání pozice x na hodnotu left
-					if (Number(x) < 0) {
-						var left = Number(x)*-1;
-						var left = Number(left)/1.93630573;
-						var left = 512 - Number(left);
-						var left = Number(left) * Number(xmultiplicator);
-					} else {
-						var left = Number(x);
-						var left = Number(left)/1.93630573;
-						var left = Number(left) + 512;
-						var left = Number(left) * Number(xmultiplicator);
-					}
+					if (document.getElementById("mainImage").naturalHeight == "1024") {					
+						if (Number(x) < 0) {
+							var left = Number(x)*-1;
+							var left = Number(left)/1.93630573;
+							var left = 512 - Number(left);
+							var left = Number(left) * Number(xmultiplicator);
+						} else {
+							var left = Number(x);
+							var left = Number(left)/1.93630573;
+							var left = Number(left) + 512;
+							var left = Number(left) * Number(xmultiplicator);
+						}
 
-					//Přepočítání hodnoty x na hodnotu top
-					if (Number(z) < 0) {
-						var top = Number(z);
-						var top = Number(top)/1.93630573;
-						var top = 512 - Number(top);
-						var top = Number(top) * Number(zmultiplicator);
-					} else {
-						var top = Number(z)*-1;
-						var top = Number(top)/1.93630573;
-						var top = Number(top) + 512;
-						var top = Number(top) * Number(zmultiplicator);
+						//Přepočítání hodnoty x na hodnotu top
+						if (Number(z) < 0) {
+							var top = Number(z);
+							var top = Number(top)/1.93630573;
+							var top = 512 - Number(top);
+							var top = Number(top) * Number(zmultiplicator);
+						} else {
+							var top = Number(z)*-1;
+							var top = Number(top)/1.93630573;
+							var top = Number(top) + 512;
+							var top = Number(top) * Number(zmultiplicator);
+						}
+					} else if(document.getElementById("mainImage").naturalHeight == "2048") {
+						if (Number(x) < 0) {
+							var left = Number(x)*-1;
+							var left = Number(left)/1.93630573;
+							var left = 1024 - Number(left);
+							var left = Number(left) * Number(xmultiplicator);
+						} else {
+							var left = Number(x);
+							var left = Number(left)/1.93630573;
+							var left = Number(left) + 1024;
+							var left = Number(left) * Number(xmultiplicator);
+						}
+
+						//Přepočítání hodnoty x na hodnotu top
+						if (Number(z) < 0) {
+							var top = Number(z);
+							var top = Number(top)/1.93630573;
+							var top = 1024 - Number(top);
+							var top = Number(top) * Number(zmultiplicator);
+						} else {
+							var top = Number(z)*-1;
+							var top = Number(top)/1.93630573;
+							var top = Number(top) + 1024;
+							var top = Number(top) * Number(zmultiplicator);
+						}
+					} else if(document.getElementById("mainImage").naturalHeight == "512") {
+						if (Number(x) < 0) {
+							var left = Number(x)*-1;
+							var left = Number(left)/1.93630573;
+							var left = 256 - Number(left);
+							var left = Number(left) * Number(xmultiplicator);
+						} else {
+							var left = Number(x);
+							var left = Number(left)/1.93630573;
+							var left = Number(left) + 256;
+							var left = Number(left) * Number(xmultiplicator);
+						}
+
+						//Přepočítání hodnoty x na hodnotu top
+						if (Number(z) < 0) {
+							var top = Number(z);
+							var top = Number(top)/1.93630573;
+							var top = 256 - Number(top);
+							var top = Number(top) * Number(zmultiplicator);
+						} else {
+							var top = Number(z)*-1;
+							var top = Number(top)/1.93630573;
+							var top = Number(top) + 256;
+							var top = Number(top) * Number(zmultiplicator);
+						}
 					}
 					document.getElementById("positionFrameWrap").innerHTML = document.getElementById("positionFrameWrap").innerHTML + '<div class="player" id="' + playerCSteamID + '"><img class="playerImage" id="' + playerCSteamID + 'cursor"src="cursor.png"><div class="playerInfo ' + playerStatus + '">' + playerName + '</div></div>';
 					if (oldTop[playerCSteamID] != undefined && resize != true) {	
@@ -391,7 +444,6 @@
 		animatePlayerCSteamID = animatePlayerCSteamID.split(";");
 		animateTop = animateTop.split(";");
 		animateLeft = animateLeft.split(";");
-		//alert(animateRotation);
 		animateRotation = animateRotation.split(";");
 		animateOldRotation = animateOldRotation.split(";");
 		for (var i = 0; i < animatePlayerCSteamID.length; i++) {
@@ -441,6 +493,9 @@
 <!--
 
 TODO:
+suport for big maps
+FIX upload failing
+Scan workshop folder
 Otáčení max o 180°
 Podpora pro IE a EDGE
 In-game chat
