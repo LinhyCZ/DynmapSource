@@ -1,11 +1,11 @@
 <?php
-	//error_reporting(0);
+	error_reporting(0);
 	include "dynmap-config.php";
 	header('Content-Type: text/html; charset=utf-8');
 
 	//Definice složek
-	$cachefolder = $_SERVER["DOCUMENT_ROOT"] . "/.cache";
-	$mapsfolder = $_SERVER["DOCUMENT_ROOT"] . "/.maps";
+	$cachefolder = getcwd() . "/.cache";
+	$mapsfolder = getcwd() . "/.maps";
 
 	//Vytvoření složek, pokud neexistují
 	if (!file_exists($cachefolder)) {
@@ -18,6 +18,16 @@
 		$old_umask = umask(0);
 		mkdir($mapsfolder, 0775);
 		umask($old_umask);
+	}
+
+	if (!file_exists("cursor.png")) {
+		file_put_contents("cursor.png", file_get_contents("https://cdn.rawgit.com/LinhyCZ/DynmapFiles/master/cursor.png"));
+	}
+
+	if (!file_exists($cachefolder . "/dynmap.dat")) {
+		$file = $cachefolder . "/dynmap.dat";
+		$file = fopen($file, "w+");
+		fclose($file);
 	}
 
 	//Zpracování serverového požadavku
@@ -40,13 +50,14 @@
 			//Kontrola stažených souborů map
 				//Čtení dat od serveru
 				$maps = urldecode($_GET["maps"]);
-				$maps = explode(" ", $maps);
+				$maps = explode(";", $maps);
 
 				$downloadedMaps = scandir($mapsfolder);
 
 				//Vypíše stažené mapy do array;
 				foreach ($downloadedMaps as $downloadedMap) {
 					if($downloadedMap != "." && $downloadedMap != "..") {
+						//echo $downloadedMap;
 						$substrMaps[] = substr($downloadedMap, 0, -4);
 					}
 				}
@@ -73,6 +84,7 @@
     	        		print_r($_FILES);
         	    	}
     			} else {
+    				echo $_FILES['file']['error'];
 			       	echo "Error.UploadFailed";
     	    	}
     	    } else {
