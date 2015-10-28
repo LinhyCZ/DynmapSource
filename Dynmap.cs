@@ -61,7 +61,7 @@ namespace dynmap.core
         {   
             //Načtení privátního klíče a složky Maps
             PrivateKey = Configuration.Instance.PrivateKey;
-            maps = Directory.GetDirectories(directory + @"\..\..\..\Maps");
+            maps = Directory.GetDirectories(directory + @"/../../../Maps");
 
 
             //Vypsání map na serveru
@@ -145,22 +145,26 @@ namespace dynmap.core
                         StreamReader reader = new StreamReader(stream, Encoding.UTF8);
                         output = reader.ReadToEnd();
                     }
- 
 
                     //Nahrání souborů map na server
                     System.Net.WebClient Client = new System.Net.WebClient ();
                     Client.Headers.Add("Content-Type", "binary/octet-stream");
-                    byte[] result = Client.UploadFile(Configuration.Instance.WebCoreAddress + "/dynmap-core.php?user=server&do=uploadfile&TransferID=" + Uri.EscapeDataString(TransferID) + "&mapname=" + uploadMaps[o], "POST", directory + @"\..\..\..\Maps\" + uploadMaps[o] + @"\Map.png"); 
+                    byte[] result = Client.UploadFile(Configuration.Instance.WebCoreAddress + "/dynmap-core.php?user=server&do=uploadfile&TransferID=" + Uri.EscapeDataString(TransferID) + "&mapname=" + uploadMaps[o], "POST", directory + @"/../../../Maps/" + uploadMaps[o] + @"/Map.png"); 
                     String s = System.Text.Encoding.UTF8.GetString (result,0,result.Length);
 
                     if (s == "Error.UploadDone")
                     {
                         Logger.LogWarning("Uploaded " + uploadMaps[o]);
                     }
-                    else if (s == "Error.UploadFailed")
+                    else if (s == "1Error.UploadFailed")
                     {
-                        Logger.LogWarning("Uploading " + uploadMaps[o] + " failed.");
+                        Logger.LogError("Uploading " + uploadMaps[o] + " failed because the uploaded file exceeds the upload_max_filesize directive in php.ini.");
+                        Logger.LogError("See http://php.net/manual/en/ini.core.php#ini.upload-max-filesize for further information!");
                     }
+                    else
+                    {
+                        Logger.LogError("Uploading " + uploadMaps[o] + " failed!");
+                    } 
                 }
                 if (o == uploadMaps.Length - 1) { Logger.LogWarning("Uploading done!");};
                 
@@ -218,6 +222,7 @@ namespace dynmap.core
                 characterName = player.CharacterName.Replace(";", "&#59").Replace("[", "&#91").Replace("]", "&#93").Replace("=", "&#61");
                 rotation = Convert.ToInt32(player.Rotation);
                 if (player.IsAdmin == true) { playerStatus = "admin"; } else if (player.IsPro == true) { playerStatus = "pro"; } else { playerStatus = "player"; }
+                UnturnedChat.Say(player, player.Position + "=Position");
                 if (player.Features.VanishMode == false) { data = data + "[Charactername=" + characterName + ";CSteamID=" + player.CSteamID + ";Position=" + player.Position + ";Rotation=" + rotation + ";PlayerStatus=" + playerStatus + "]"; };
             }
 
