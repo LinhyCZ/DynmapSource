@@ -24,12 +24,14 @@ namespace dynmap.core
         public string PrivateKey;
         public int syncInterval;
         public string WebCoreAddress;
+        public bool displayInChat;
 
         public void LoadDefaults()
         {
             PrivateKey = "MySecretPrivateKey";
             syncInterval = 5000;
             WebCoreAddress = "http://localhost";
+            displayInChat = true;
         }
     }
 
@@ -39,7 +41,7 @@ namespace dynmap.core
         public static Dynmap Instance;
         public List<CSteamID> Nicks = new List<CSteamID>();
         public Timer myTimer;
-        public string directory = Directory.GetCurrentDirectory();
+        public string directory = System.IO.Directory.GetCurrentDirectory();
         public string[] maps;
         public string sendMaps;
         public string data = string.Empty;
@@ -58,11 +60,16 @@ namespace dynmap.core
 
 
         protected override void Load()
-        {   
+        {
+            Logger.Log("Loading ...");
+
             //Načtení privátního klíče a složky Maps
             PrivateKey = Configuration.Instance.PrivateKey;
-            maps = Directory.GetDirectories(directory + @"/../../../Maps");
-
+            maps = System.IO.Directory.GetDirectories(System.IO.Path.GetFullPath(directory + @"/../../../Maps"));
+            foreach(string map in maps)
+            {
+                Logger.Log("Finding map : " + map);
+            }
 
             //Vypsání map na serveru
             foreach (string splitMap in maps)
@@ -111,6 +118,7 @@ namespace dynmap.core
                 if (sentMessage == false) { Logger.LogWarning("Uploading map files to the server! This may take some time!"); sentMessage = true; };
                 if (uploadMaps[o] != string.Empty)
                 {
+                    Logger.Log("Uploading map : " + uploadMaps[o]);
                     //Generování TransferID
 
                     RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
@@ -149,7 +157,7 @@ namespace dynmap.core
                     //Nahrání souborů map na server
                     System.Net.WebClient Client = new System.Net.WebClient ();
                     Client.Headers.Add("Content-Type", "binary/octet-stream");
-                    byte[] result = Client.UploadFile(Configuration.Instance.WebCoreAddress + "/dynmap-core.php?user=server&do=uploadfile&TransferID=" + Uri.EscapeDataString(TransferID) + "&mapname=" + uploadMaps[o], "POST", directory + @"/../../../Maps/" + uploadMaps[o] + @"/Map.png"); 
+                    byte[] result = Client.UploadFile(Configuration.Instance.WebCoreAddress + "/dynmap-core.php?user=server&do=uploadfile&TransferID=" + Uri.EscapeDataString(TransferID) + "&mapname=" + Uri.EscapeDataString(uploadMaps[o].Split('\\')[uploadMaps[0].Split('\\').Length - 1]), "POST", @"../../../Maps/" + uploadMaps[o] + @"/Map.png");
                     String s = System.Text.Encoding.UTF8.GetString (result,0,result.Length);
 
                     if (s == "Error.UploadDone")
@@ -222,7 +230,7 @@ namespace dynmap.core
                 characterName = player.CharacterName.Replace(";", "&#59").Replace("[", "&#91").Replace("]", "&#93").Replace("=", "&#61");
                 rotation = Convert.ToInt32(player.Rotation);
                 if (player.IsAdmin == true) { playerStatus = "admin"; } else if (player.IsPro == true) { playerStatus = "pro"; } else { playerStatus = "player"; }
-                UnturnedChat.Say(player, player.Position + "=Position");
+                if (Configuration.Instance.displayInChat == true) { UnturnedChat.Say(player, player.Position + "=Position"); }
                 if (player.Features.VanishMode == false) { data = data + "[Charactername=" + characterName + ";CSteamID=" + player.CSteamID + ";Position=" + player.Position + ";Rotation=" + rotation + ";PlayerStatus=" + playerStatus + "]"; };
             }
 
@@ -230,8 +238,8 @@ namespace dynmap.core
             if (data != string.Empty || firstrun == true)
             {
                 url =  Configuration.Instance.WebCoreAddress + "/dynmap-core.php?user=server";
-                postData = "map=" + SDG.Unturned.Provider.map + "&data=" + Uri.EscapeDataString(data) + "&privatekey=" + PrivateKey;
-                if (shutdown == true) { postData = "map=" + SDG.Unturned.Provider.map + "&privatekey=" + PrivateKey; };
+                postData = "map=" + Uri.EscapeDataString(SDG.Unturned.Provider.map) + "&data=" + Uri.EscapeDataString(data) + "&privatekey=" + PrivateKey;
+                if (shutdown == true) { postData = "map=" + Uri.EscapeDataString(SDG.Unturned.Provider.map) + "&privatekey=" + PrivateKey; };
                 var post = Encoding.ASCII.GetBytes(postData);
 
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
